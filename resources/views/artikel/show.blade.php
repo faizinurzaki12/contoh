@@ -178,8 +178,9 @@
         <nav class="mx-auto max-w-7xl neop-navbar-container bg-white dark:bg-gray-900 px-4 py-2.5 flex items-center justify-between transition-colors duration-300">
             
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-white dark:bg-blue-600 border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-lg flex items-center justify-center text-sm">
-                    🏛️
+                <!-- Perubahan 1: Mengganti emoji 🏛️ dengan logo SMK 4 -->
+                <div class="w-9 h-9 bg-white dark:bg-blue-600 border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] rounded-lg flex items-center justify-center overflow-hidden p-1">
+                    <img src="{{ asset('images/smk4.png') }}" alt="Logo" class="w-6 h-6 sm:w-7 sm:h-7 object-cover rounded-md" />
                 </div>
                 <span class="text-base sm:text-lg font-black tracking-tight text-black dark:text-white uppercase">MUSEUM.KARYA</span>
             </div>
@@ -200,9 +201,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     </svg>
                 </button>
-                <a href="{{ url('/login') }}" class="neop-btn-box px-4 py-1.5 bg-cyan-300 dark:bg-cyan-600 text-black dark:text-white font-black text-xs sm:text-sm rounded-full uppercase tracking-wider">
-                    LOGIN
-                </a>
+                @auth
+                    <a href="{{ $dashboardUrl }}"
+                        class="md:hidden mt-2 text-xs font-black px-5 py-3 bg-[#74B9FF] text-black border-2 border-black rounded-2xl shadow-[2px_2px_0px_#000] active:translate-y-[1px] transition block text-center">
+                        DASHBOARD
+                    </a>
+                @else
+                    <a href="{{ route('login') }}"
+                        class="md:hidden mt-2 text-xs font-black px-5 py-3 bg-[#74B9FF] text-black border-2 border-black rounded-2xl shadow-[2px_2px_0px_#000] active:translate-y-[1px] transition block text-center">
+                        LOGIN
+                    </a>
+                @endauth
             </div>
 
         </nav>
@@ -253,7 +262,8 @@
                     <img src="{{ asset('storage/' . $article->cover) }}" alt="{{ $article->title }}" class="w-full h-full object-cover">
                 </div>
 
-                <div class="article-content text-gray-700 dark:text-gray-300">
+                <!-- Perubahan 2: Menambahkan kelas text-left agar teks deskripsi rata kiri -->
+                <div class="article-content text-gray-700 dark:text-gray-300 text-left">
                     {!! nl2br(e($article->content)) !!}
 
                     <!-- Bagikan artikel -->

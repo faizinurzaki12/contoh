@@ -34,11 +34,14 @@
                 <h2 class="mt-4 text-xl md:text-2xl font-black text-slate-900">{{ $user->name }}</h2>
 
                 <div class="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm font-bold text-slate-500">
+                    @if (!empty($user->kelas))
+                        <span>{{ $user->kelas }}</span>
+                        <span class="text-slate-300">•</span>
+                    @endif
                     <span>{{ $user->jurusan ?? 'PPLG' }}</span>
                     <span class="text-slate-300">•</span>
                     <span>{{ $projects->count() }} Karya</span>
                 </div>
-
                 <p class="mt-3 max-w-xl text-sm font-bold text-slate-600">{{ $user->bio ?? 'Belum ada bio.' }}</p>
 
                 {{-- TAMBAHAN: Link Instagram --}}
@@ -123,6 +126,14 @@
                                                 <source src="{{ $fileUrl }}" type="video/{{ $extension }}">
                                                 Browser kamu tidak mendukung pemutar video.
                                             </video>
+                                                                                    @elseif ($project->live_link)
+                                            {{-- Preview website dari kolom live_link (iframe diperkecil supaya muat di kotak) --}}
+                                            <div class="relative w-full h-full overflow-hidden pointer-events-none">
+                                                <iframe src="{{ $project->live_link }}" title="Preview {{ $project->title }}"
+                                                    loading="lazy" sandbox="allow-scripts allow-same-origin"
+                                                    class="absolute top-0 left-0 border-0 origin-top-left"
+                                                    style="width: 400%; height: 400%; transform: scale(0.25);"></iframe>
+                                            </div>
                                         @else
                                             <div class="flex flex-col items-center justify-center text-slate-900 p-4 text-center">
                                                 <svg class="w-10 h-10 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">

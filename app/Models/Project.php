@@ -123,6 +123,34 @@ class Project extends Model
     }
 
     /**
+     * Karya yang boleh dilihat admin: super admin = semua, admin jurusan = jurusannya saja.
+     */
+    public function scopeVisibleToAdmin($query, User $admin)
+    {
+        if ($admin->isSuperAdmin()) {
+            return $query;
+        }
+
+        $aliases = User::jurusanAliases($admin->jurusan);
+
+        return $aliases ? $query->whereIn('jurusan', $aliases) : $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Apakah $admin boleh me-review / menghapus karya ini?
+     */
+    public function isManageableBy(User $admin): bool
+    {
+        if ($admin->isSuperAdmin()) {
+            return true;
+        }
+
+        $key = User::normalizeJurusan($admin->jurusan);
+
+        return $admin->isAdmin() && $key !== null && $key === User::normalizeJurusan($this->jurusan);
+    }
+
+    /**
      * HELPER METHODS
      */
 

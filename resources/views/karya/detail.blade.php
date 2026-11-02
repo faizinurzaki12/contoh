@@ -175,17 +175,6 @@
             @endforelse
         </div>
 
-        {{-- Panel GIF --}}
-        <div id="gif-panel" class="hidden flex-col h-56 shrink-0 p-3 bg-zinc-100 dark:bg-zinc-800 border-t-[3px] border-zinc-900 dark:border-zinc-100">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-black">Pilih GIF</span>
-                <button type="button" onclick="toggleGifPicker(false)" class="text-xs font-black text-sky-600 cursor-pointer">Tutup</button>
-            </div>
-            <input type="text" id="gif-search" placeholder="Cari GIF (keren, kucing, tepuk tangan)..." oninput="filterGifs(this.value)"
-                   class="w-full px-3 py-2 mb-2 text-xs font-bold rounded-xl border-2 border-zinc-900 dark:border-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none">
-            <div id="gif-results" class="flex-1 overflow-y-auto scrollbar-thin grid grid-cols-3 gap-2"></div>
-        </div>
-
         {{-- Kolom ketik --}}
         <div class="shrink-0 border-t-[3px] border-zinc-900 dark:border-zinc-100 bg-white dark:bg-zinc-900">
             @auth
@@ -195,8 +184,6 @@
                 </div>
 
                 <form id="comment-form" onsubmit="postComment(event)" class="p-3 flex items-center gap-2">
-                    <button type="button" onclick="toggleGifPicker()" title="Kirim GIF"
-                            class="nb-btn px-3 py-2.5 bg-sky-300 text-zinc-900 text-xs font-black rounded-xl border-2 border-zinc-900 shadow-[2px_2px_0px_#000] shrink-0 cursor-pointer">GIF</button>
                     <input type="text" id="comment-input" required maxlength="500" autocomplete="off" placeholder="Tulis komentar atau apresiasi..."
                            class="flex-1 min-w-0 px-4 py-2.5 text-xs font-bold rounded-xl border-2 border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:bg-yellow-50 dark:focus:bg-zinc-700">
                     <button type="submit" id="submit-btn"
@@ -238,18 +225,6 @@
     const replyBar   = document.getElementById('reply-bar');
     let parentId = null;
 
-    const gifs = [
-        { name: "Keren Mantap",     url: "https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif" },
-        { name: "Kucing Lucu",      url: "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" },
-        { name: "Spongebob Happy",  url: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif" },
-        { name: "Jempol Salut",     url: "https://media.giphy.com/media/111ebonMs90YLu/giphy.gif" },
-        { name: "Tepuk Tangan",     url: "https://media.giphy.com/media/13CoXPoqCJRO6A/giphy.gif" },
-        { name: "Tertawa",          url: "https://media.giphy.com/media/9uIV1q5I949V6/giphy.gif" },
-        { name: "Keren Banget",     url: "https://media.giphy.com/media/Z6f7vzq3iP6Mw/giphy.gif" },
-        { name: "Bingung",          url: "https://media.giphy.com/media/g01ZnwAUvutuK8GIQn/giphy.gif" },
-        { name: "Mantap Jiwa",      url: "https://media.giphy.com/media/L3ERvA6jWCdYqO44Xm/giphy.gif" }
-    ];
-
     // ===== Modal =====
     function openCommentModal() {
         modal.classList.add('open');
@@ -259,7 +234,6 @@
     function closeCommentModal() {
         modal.classList.remove('open');
         document.body.classList.remove('overflow-hidden');
-        toggleGifPicker(false);
     }
     modal.addEventListener('click', e => { if (e.target === modal) closeCommentModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCommentModal(); });
@@ -298,29 +272,6 @@
         const open  = forceOpen ?? list.classList.contains('hidden');
         list.classList.toggle('hidden', !open);
         label.textContent = open ? 'Sembunyikan balasan' : `Lihat ${list.children.length} balasan`;
-    }
-
-    // ===== GIF =====
-    function toggleGifPicker(force) {
-        const panel = document.getElementById('gif-panel');
-        const show = force ?? panel.classList.contains('hidden');
-        panel.classList.toggle('hidden', !show);
-        panel.classList.toggle('flex', show);
-        if (show) renderGifs(gifs);
-    }
-    function filterGifs(q) {
-        renderGifs(gifs.filter(g => g.name.toLowerCase().includes(q.toLowerCase())));
-    }
-    function renderGifs(list) {
-        const box = document.getElementById('gif-results');
-        box.innerHTML = list.length ? '' : '<p class="col-span-3 text-center text-xs font-bold text-zinc-500 py-4">GIF tidak ditemukan.</p>';
-        list.forEach(g => {
-            const img = document.createElement('img');
-            img.src = g.url; img.title = g.name; img.loading = 'lazy';
-            img.className = 'w-full h-20 object-cover rounded-lg border-2 border-zinc-900 cursor-pointer hover:opacity-80';
-            img.onclick = () => { toggleGifPicker(false); send({ comment: 'GIF', type: 'gif', attachment: g.url }); };
-            box.appendChild(img);
-        });
     }
 
     // ===== Kirim komentar =====

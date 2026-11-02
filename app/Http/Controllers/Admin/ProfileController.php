@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\MuseumCache;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -39,6 +40,8 @@ class ProfileController extends Controller
         }
 
         $user->save();
+
+        MuseumCache::flush('artikel', 'stat');
 
         return back()->with('success', 'Profil berhasil diperbarui!');
     }

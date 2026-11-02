@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\MuseumCache;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use Illuminate\Http\Request;
@@ -16,10 +17,8 @@ class AdminProjectController extends Controller
         $user = Auth::user();
 
         $projects = Project::with('user')
-            // Filter Jurusan: Jika BUKAN Super Admin, filter berdasarkan jurusan Admin
-            ->when(!$user->isSuperAdmin() && $user->jurusan, function ($query) use ($user) {
-                $query->where('jurusan', $user->jurusan);
-            })
+            // Admin jurusan hanya melihat karya jurusannya sendiri (Super Admin: semua)
+            ->visibleToAdmin($user)
             // Filter Pencarian
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -39,6 +38,8 @@ class AdminProjectController extends Controller
 
     public function updateStatus(Request $request, Project $project)
     {
+        abort_unless($project->isManageableBy(Auth::user()), 403, 'Karya ini bukan dari jurusanmu.');
+
         $request->validate([
             'status' => 'required|in:approved,rejected',
             'catatan' => 'nullable|string'
@@ -60,22 +61,33 @@ class AdminProjectController extends Controller
             ]);
         }
 
+        MuseumCache::flush('karya', 'stat');
+
         return redirect('/admin/karya')
             ->with('success', 'Status berhasil diperbarui');
     }
 
     public function show(Project $project)
     {
+        abort_unless($project->isManageableBy(Auth::user()), 403, 'Karya ini bukan dari jurusanmu.');
+
+        // Muat relasi user (pemilik project) dan reviewer (admin yang mereview)
+        $project->load(['user', 'reviewer']);
+
         return view('admin.detail-karya', compact('project'));
     }
 
     public function destroy(Project $project)
     {
+        abort_unless($project->isManageableBy(Auth::user()), 403, 'Karya ini bukan dari jurusanmu.');
+
         if ($project->file_path) {
             Storage::disk('public')->delete($project->file_path);
         }
 
         $project->delete();
+
+        MuseumCache::flush('karya', 'stat');
 
         return redirect('/admin/karya')
             ->with('success', 'Karya berhasil dihapus.');

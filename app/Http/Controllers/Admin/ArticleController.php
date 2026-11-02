@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\MuseumCache;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Article;
@@ -54,6 +55,8 @@ class ArticleController extends Controller
             'published_at' => $request->status == 'published' ? now() : null,
         ]);
 
+        MuseumCache::flush('artikel');
+
         return redirect()->route('articles.index')->with('success', 'Artikel berhasil ditambahkan.');
     }
 
@@ -99,6 +102,8 @@ class ArticleController extends Controller
             'published_at' => $request->status == 'published' ? now() : null,
         ]);
 
+        MuseumCache::flush('artikel');
+
         return redirect()->route('articles.index')->with('success', 'Artikel berhasil diperbarui.');
     }
 
@@ -106,6 +111,8 @@ class ArticleController extends Controller
     {
         $article = Article::findOrFail($id);
         $article->delete();
+
+        MuseumCache::flush('artikel');
 
         return redirect()->route('articles.index')->with('success', 'Artikel berhasil dihapus');
     }

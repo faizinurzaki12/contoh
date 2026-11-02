@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\MuseumCache;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -25,6 +26,8 @@ class AdminCategoryController extends Controller
             'name' => $request->name,
         ]);
 
+        MuseumCache::flush('artikel');
+
         return back()->with('success', 'Kategori berhasil ditambahkan.');
     }
 
@@ -40,6 +43,8 @@ class AdminCategoryController extends Controller
             'name' => $request->name,
         ]);
 
+        MuseumCache::flush('artikel');
+
         return back()->with('success', 'Kategori berhasil diubah.');
     }
 
@@ -47,6 +52,8 @@ class AdminCategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         $category->delete();
+
+        MuseumCache::flush('artikel');
 
         return back()->with('success', 'Kategori berhasil dihapus.');
     }

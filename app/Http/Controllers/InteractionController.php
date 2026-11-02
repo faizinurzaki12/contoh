@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\MuseumCache;
 use App\Models\Project;
 use App\Models\ProjectLike;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,9 @@ class InteractionController extends Controller
 
         $userId = Auth::id();
         $liked = $this->toggleForUser($project, $userId);
+
+        // Jumlah like tampil di beranda, /karya & profil -> hapus cache supaya langsung segar
+        MuseumCache::flush('karya');
 
         return response()->json([
             'success'     => true,

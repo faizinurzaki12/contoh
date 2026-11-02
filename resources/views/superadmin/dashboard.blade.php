@@ -46,14 +46,13 @@
 
         @php
             $totalJ = $karyaPerJurusan->sum('total');
-            // warna semantik ala Bootstrap per jurusan
             $jurusanColorMap = [
-                'PPLG' => '#198754', // success
-                'TKJ'  => '#0d6efd', // primary
-                'TJKT' => '#0d6efd', // primary (alias TKJ)
-                'DKV'  => '#ffc107', // warning
-                'TOI'  => '#6c757d', // secondary
-                'TSM'  => '#dc3545', // danger
+                'PPLG' => '#198754',
+                'TKJ'  => '#0d6efd',
+                'TJKT' => '#0d6efd',
+                'DKV'  => '#ffc107',
+                'TOI'  => '#6c757d',
+                'TSM'  => '#dc3545',
             ];
             $fallbackColors = ['#A78BFA','#4ECDC4','#F472B6','#FB923C'];
             $r = 70; $cx = 90; $cy = 90;
@@ -132,15 +131,16 @@
                 <a href="{{ url('/admin/karya') }}" class="text-sm font-bold text-black bg-violet-300 border-2 border-black rounded-lg px-2 py-1 hover:bg-violet-400">Lihat semua</a>
             </div>
 
-            <div class="overflow-x-auto rounded-xl border-2 border-black">
-                <table class="w-full text-sm text-left">
-                    <thead>
+            {{-- Tambahkan max-h-[350px] dan overflow-y-auto di sini --}}
+            <div class="max-h-[350px] overflow-y-auto overflow-x-auto rounded-xl border-2 border-black">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="sticky top-0 z-10">
                         <tr class="bg-black text-white">
-                            <th class="py-2 px-3 font-bold">Judul Karya</th>
-                            <th class="py-2 px-3 font-bold">Siswa</th>
-                            <th class="py-2 px-3 font-bold">Jurusan</th>
-                            <th class="py-2 px-3 font-bold">Status</th>
-                            <th class="py-2 px-3 font-bold">Direview Oleh</th>
+                            <th class="py-2 px-3 font-bold bg-black">Judul Karya</th>
+                            <th class="py-2 px-3 font-bold bg-black">Siswa</th>
+                            <th class="py-2 px-3 font-bold bg-black">Jurusan</th>
+                            <th class="py-2 px-3 font-bold bg-black">Status</th>
+                            <th class="py-2 px-3 font-bold bg-black">Direview Oleh</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -157,8 +157,8 @@
                                 <td class="py-3 px-3 font-bold text-black">{{ $karya->title }}</td>
                                 <td class="py-3 px-3 text-gray-700">{{ $karya->user->name ?? '-' }}</td>
                                 <td class="py-3 px-3 text-gray-700">{{ $karya->jurusan }}</td>
-                                <td class="py-3 px-3">
-                                    <span class="px-2 py-1 text-xs font-bold border-2 border-black rounded-lg {{ $badgeClass }}">
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <span class="inline-block px-2 py-1 text-xs font-bold border-2 border-black rounded-lg {{ $badgeClass }}">
                                         {{ $karya->getStatusLabel() }}
                                     </span>
                                 </td>
@@ -181,13 +181,14 @@
                 <a href="{{ url('/superadmin/manajemen-admin') }}" class="text-sm font-bold text-black bg-violet-300 border-2 border-black rounded-lg px-2 py-1 hover:bg-violet-400">Kelola admin</a>
             </div>
 
-            <div class="overflow-x-auto rounded-xl border-2 border-black">
-                <table class="w-full text-sm text-left">
-                    <thead>
+            {{-- Tambahkan max-h-[350px] dan overflow-y-auto di sini juga --}}
+            <div class="max-h-[350px] overflow-y-auto overflow-x-auto rounded-xl border-2 border-black">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="sticky top-0 z-10">
                         <tr class="bg-black text-white">
-                            <th class="py-2 px-3 font-bold">Nama Admin</th>
-                            <th class="py-2 px-3 font-bold">Email</th>
-                            <th class="py-2 px-3 font-bold">Karya Direview</th>
+                            <th class="py-2 px-3 font-bold bg-black">Nama Admin</th>
+                            <th class="py-2 px-3 font-bold bg-black">Email</th>
+                            <th class="py-2 px-3 font-bold bg-black">Karya Direview</th>
                         </tr>
                     </thead>
                     <tbody>

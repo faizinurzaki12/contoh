@@ -4,8 +4,49 @@
 
 @section('content')
     @php
-        // Jurusan PPLG punya kolom tambahan: URL GitHub (wajib diisi)
-        $isPplg = strtoupper(trim($project->jurusan ?? '')) === 'PPLG';
+        // Konfigurasi label dinamis per jurusan (sama seperti form upload)
+        $defaultLabels = [
+            'tech_label' => 'Teknologi / Alat yang Digunakan',
+            'live_label' => 'Link Live Demo / Portfolio',
+            'file_label' => 'Dokumentasi / Foto Karya',
+        ];
+
+        $overrides = [
+            'PPLG' => [
+                'tech_label' => 'Bahasa Pemrograman / Framework',
+                'live_label' => 'Link Live Demo / Preview',
+                'file_label' => 'Screenshot Tampilan Aplikasi',
+            ],
+            'TKJ' => [
+                'tech_label' => 'Perangkat / Software Jaringan',
+                'live_label' => 'Link Dokumentasi / Video Simulation',
+                'file_label' => 'Foto / Skema Topologi Jaringan',
+            ],
+            'DKV' => [
+                'tech_label' => 'Software Desain yang Digunakan',
+                'live_label' => 'Link Portfolio (Behance/Dribbble/Drive)',
+                'file_label' => 'File Hasil Desain',
+            ],
+            'TOI' => [
+                'tech_label' => 'Jenis Alat / Mesin Otomasi',
+                'live_label' => 'Link Video Demo Alat',
+                'file_label' => 'Foto Alat / Mesin',
+            ],
+            'TSM' => [
+                'tech_label' => 'Komponen / Alat / Teknologi',
+                'live_label' => 'Link Video Demo / Dokumentasi',
+                'file_label' => 'Foto Hasil Karya / Kendaraan',
+            ],
+        ];
+
+        // Normalisasi key jurusan (TJKT disamakan dengan TKJ)
+        $jurusanKey = strtoupper(trim($project->jurusan ?? ''));
+        if ($jurusanKey === 'TJKT') {
+            $jurusanKey = 'TKJ';
+        }
+
+        $labels = array_merge($defaultLabels, $overrides[$jurusanKey] ?? []);
+        $isPplg = $jurusanKey === 'PPLG';
 
         // Warna baris "Catatan / Alasan Admin" mengikuti status project
         $note = match ($project->status) {
@@ -77,8 +118,18 @@
                                     <td class="px-6 py-4 font-black text-slate-900 w-1/3 bg-[#F1F5F9] border-r-[3px] border-slate-900">Jurusan</td>
                                     <td class="px-6 py-4">
                                         <span class="px-3 py-1 bg-[#818CF8] text-white rounded-full text-xs font-black neo-border">
-                                            {{ $project->jurusan ?? '-' }}
+                                            {{ $project->jurusan === 'TKJ' ? 'TJKT' : ($project->jurusan ?? '-') }}
                                         </span>
+                                    </td>
+                                </tr>
+
+                                {{-- Teknologi / Alat (Dinamis per Jurusan) --}}
+                                <tr class="bg-white">
+                                    <td class="px-6 py-4 font-black text-slate-900 w-1/3 bg-[#F1F5F9] border-r-[3px] border-slate-900">
+                                        {{ $labels['tech_label'] }}
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-800 font-extrabold">
+                                        {{ $project->technology_stack ?? '-' }}
                                     </td>
                                 </tr>
 
@@ -88,22 +139,7 @@
                                     <td class="px-6 py-4 leading-relaxed text-slate-800">{{ $project->description }}</td>
                                 </tr>
 
-                                {{-- URL Project --}}
-                                <tr class="bg-white">
-                                    <td class="px-6 py-4 font-black text-slate-900 w-1/3 bg-[#F1F5F9] border-r-[3px] border-slate-900">URL Project</td>
-                                    <td class="px-6 py-4">
-                                        @if ($project->live_link)
-                                            <a href="{{ $project->live_link }}" target="_blank" rel="noopener"
-                                                class="text-indigo-600 hover:text-indigo-800 font-extrabold underline inline-flex items-center gap-1 break-all">
-                                                {{ $project->live_link }} ↗
-                                            </a>
-                                        @else
-                                            <span class="text-slate-500 font-bold">Tidak ada link</span>
-                                        @endif
-                                    </td>
-                                </tr>
-
-                                {{-- URL GitHub (khusus PPLG) --}}
+                                {{-- URL GitHub (Khusus PPLG) --}}
                                 @if ($isPplg)
                                     <tr class="bg-white">
                                         <td class="px-6 py-4 font-black text-slate-900 w-1/3 bg-[#F1F5F9] border-r-[3px] border-slate-900">URL GitHub</td>
@@ -120,9 +156,41 @@
                                     </tr>
                                 @endif
 
-                                {{-- Dokumentasi Project --}}
+                                {{-- URL Project / Live Demo --}}
                                 <tr class="bg-white">
-                                    <td class="px-6 py-4 font-black text-slate-900 w-1/3 bg-[#F1F5F9] border-r-[3px] border-slate-900">Dokumentasi Project</td>
+                                    <td class="px-6 py-4 font-black text-slate-900 w-1/3 bg-[#F1F5F9] border-r-[3px] border-slate-900">
+                                        {{ $labels['live_label'] }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @if ($project->live_link)
+                                            <a href="{{ $project->live_link }}" target="_blank" rel="noopener"
+                                                class="text-indigo-600 hover:text-indigo-800 font-extrabold underline inline-flex items-center gap-1 break-all">
+                                                {{ $project->live_link }} ↗
+                                            </a>
+                                        @else
+                                            <span class="text-slate-500 font-bold">Tidak ada link</span>
+                                        @endif
+                                    </td>
+                                </tr>
+
+                                {{-- Link Embed / Iframe (Jika ada) --}}
+                                @if (!empty($project->iframe_link))
+                                    <tr class="bg-white">
+                                        <td class="px-6 py-4 font-black text-slate-900 w-1/3 bg-[#F1F5F9] border-r-[3px] border-slate-900">Link Embed / Iframe</td>
+                                        <td class="px-6 py-4">
+                                            <a href="{{ $project->iframe_link }}" target="_blank" rel="noopener"
+                                                class="text-indigo-600 hover:text-indigo-800 font-extrabold underline inline-flex items-center gap-1 break-all">
+                                                {{ $project->iframe_link }} ↗
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                {{-- Dokumentasi Project (Foto) --}}
+                                <tr class="bg-white">
+                                    <td class="px-6 py-4 font-black text-slate-900 w-1/3 bg-[#F1F5F9] border-r-[3px] border-slate-900">
+                                        {{ $labels['file_label'] }}
+                                    </td>
                                     <td class="px-6 py-4">
                                         @if ($project->file_path)
                                             <div class="relative inline-block">

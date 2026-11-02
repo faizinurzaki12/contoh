@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Support\MuseumCache;
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use Illuminate\Http\Request;
@@ -50,15 +51,13 @@ class ProfilController extends Controller
 
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
-            'jurusan'      => 'nullable|string|max:255', // Diubah dari 'in:...' menjadi string bebas
             'bio'          => 'nullable|string|max:500',
-            'instagram' => 'nullable|string|max:50', // Diubah dari phone_number
+            'instagram'    => 'nullable|string|max:50', 
             'avatar'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'password'     => ['nullable', 'confirmed', Password::min(6)],
         ]);
 
         $user->name         = $validated['name'];
-        $user->jurusan       = $validated['jurusan'] ?? $user->jurusan;
         $user->bio           = $request->bio;
         $user->instagram = $validated['instagram'] ?? null;
 
@@ -82,6 +81,9 @@ class ProfilController extends Controller
         }
 
         $user->save();
+
+        // Nama/foto/bio tampil di beranda, /karya & profil publik
+        MuseumCache::flush('karya');
 
         return redirect()->route('siswa.profil')
             ->with('success', 'Profil berhasil diperbarui.');

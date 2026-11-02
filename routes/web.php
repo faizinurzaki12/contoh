@@ -95,6 +95,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/siswa/profil', [ProfilController::class, 'update'])->name('siswa.profil.update');
 
     // ==================== ROUTE ADMIN JURUSAN ====================
+    // Hanya role admin (0/1) yang boleh masuk; siswa ditolak 403
+    Route::middleware('admin')->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index']);
     
     // Kode Undangan (Resource Route)
@@ -123,6 +125,7 @@ Route::middleware('auth')->group(function () {
     // Profil Admin
     Route::get('/admin/profile', [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::put('/admin/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
+    });
 
     // ==================== KOMENTAR ====================
     Route::post('/project/{project}/comment', [KaryaController::class, 'comment']);

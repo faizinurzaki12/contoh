@@ -5,6 +5,52 @@
 
 @section('content')
 
+    @php
+        // Konfigurasi label dinamis per jurusan
+        $defaultLabels = [
+            'tech_label' => 'Teknologi / Alat',
+            'live_label' => 'Link Project',
+            'file_label' => 'Dokumentasi',
+        ];
+
+        $overrides = [
+            'PPLG' => [
+                'tech_label' => 'Bahasa / Framework',
+                'live_label' => 'Link Live Demo',
+                'file_label' => 'Screenshot Aplikasi',
+            ],
+            'TKJ' => [
+                'tech_label' => 'Perangkat / Software',
+                'live_label' => 'Link Simulasi / Video',
+                'file_label' => 'Topologi Jaringan',
+            ],
+            'DKV' => [
+                'tech_label' => 'Software Desain',
+                'live_label' => 'Link Portfolio',
+                'file_label' => 'File Desain',
+            ],
+            'TOI' => [
+                'tech_label' => 'Alat / Mesin Otomasi',
+                'live_label' => 'Link Video Demo',
+                'file_label' => 'Foto Alat / Mesin',
+            ],
+            'TSM' => [
+                'tech_label' => 'Komponen / Alat',
+                'live_label' => 'Link Video / Dokumentasi',
+                'file_label' => 'Foto Kendaraan / Karya',
+            ],
+        ];
+
+        // Normalisasi key jurusan (TJKT disamakan dengan TKJ)
+        $jurusanKey = strtoupper(trim($project->jurusan ?? ''));
+        if ($jurusanKey === 'TJKT') {
+            $jurusanKey = 'TKJ';
+        }
+
+        $labels = array_merge($defaultLabels, $overrides[$jurusanKey] ?? []);
+        $isPplg = $jurusanKey === 'PPLG';
+    @endphp
+
     <main class="flex-1 flex flex-col justify-center items-center -m-4 sm:-m-8 p-4 sm:p-6 md:p-8">
         <div class="w-full max-w-2xl md:max-w-3xl my-auto">
 
@@ -40,7 +86,7 @@
 
                                 <tr class="bg-gray-50">
                                     <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200 w-1/3 sm:w-1/4">Nama Siswa</td>
-                                    <td class="p-3 sm:p-4">{{ $project->user->name }}</td>
+                                    <td class="p-3 sm:p-4">{{ $project->user->name ?? '-' }}</td>
                                 </tr>
 
                                 <tr>
@@ -52,46 +98,67 @@
                                     <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">Jurusan</td>
                                     <td class="p-3 sm:p-4">
                                         <span class="px-3 py-1 bg-pink-400 text-black border-2 border-black rounded-md text-[11px] sm:text-xs font-black">
-                                            {{ $project->jurusan }}
+                                            {{ $project->jurusan === 'TKJ' ? 'TJKT' : ($project->jurusan ?? '-') }}
                                         </span>
                                     </td>
                                 </tr>
 
+                                {{-- Teknologi / Alat (Dinamis sesuai Jurusan) --}}
                                 <tr>
+                                    <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">{{ $labels['tech_label'] }}</td>
+                                    <td class="p-3 sm:p-4 font-extrabold">{{ $project->technology_stack ?? '-' }}</td>
+                                </tr>
+
+                                <tr class="bg-gray-50">
                                     <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">Deskripsi</td>
                                     <td class="p-3 sm:p-4 leading-relaxed">{{ $project->description }}</td>
                                 </tr>
 
-                                <tr class="bg-gray-50">
-                                    <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">Link Project</td>
+                                {{-- Link GitHub (Khusus PPLG) --}}
+                                @if($isPplg)
+                                    <tr>
+                                        <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">Link GitHub</td>
+                                        <td class="p-3 sm:p-4">
+                                            @if($project->github_link)
+                                                <a href="{{ $project->github_link }}" target="_blank" class="bg-blue-300 px-2 py-1 rounded border-2 border-black hover:bg-blue-400 font-bold underline inline-flex items-center gap-1 break-all">
+                                                    {{ $project->github_link }} ↗
+                                                </a>
+                                            @else
+                                                <span class="text-gray-500 font-bold">Belum diisi</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                {{-- Link Project / Live Demo (Dinamis labelnya) --}}
+                                <tr class="{{ $isPplg ? 'bg-gray-50' : '' }}">
+                                    <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">{{ $labels['live_label'] }}</td>
                                     <td class="p-3 sm:p-4">
                                         @if($project->live_link)
                                             <a href="{{ $project->live_link }}" target="_blank" class="bg-blue-300 px-2 py-1 rounded border-2 border-black hover:bg-blue-400 font-bold underline inline-flex items-center gap-1 break-all">
                                                 {{ $project->live_link }} ↗
                                             </a>
                                         @else
-                                            <span class="text-gray-500">-</span>
+                                            <span class="text-gray-500 font-bold">-</span>
                                         @endif
                                     </td>
                                 </tr>
 
-                                @if(strtoupper($project->jurusan) === 'PPLG')
-                                <tr>
-                                    <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">Link GitHub</td>
-                                    <td class="p-3 sm:p-4">
-                                        @if($project->github_link)
-                                            <a href="{{ $project->github_link }}" target="_blank" class="bg-blue-300 px-2 py-1 rounded border-2 border-black hover:bg-blue-400 font-bold underline inline-flex items-center gap-1 break-all">
-                                                {{ $project->github_link }} ↗
+                                {{-- Link Embed / Iframe (Jika ada) --}}
+                                @if(!empty($project->iframe_link))
+                                    <tr>
+                                        <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">Link Embed / Iframe</td>
+                                        <td class="p-3 sm:p-4">
+                                            <a href="{{ $project->iframe_link }}" target="_blank" class="bg-blue-300 px-2 py-1 rounded border-2 border-black hover:bg-blue-400 font-bold underline inline-flex items-center gap-1 break-all">
+                                                {{ $project->iframe_link }} ↗
                                             </a>
-                                        @else
-                                            <span class="text-gray-500">-</span>
-                                        @endif
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
                                 @endif
 
-                                <tr class="bg-gray-50">
-                                    <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">Dokumentasi</td>
+                                {{-- Dokumentasi --}}
+                                <tr class="{{ $isPplg ? '' : 'bg-gray-50' }}">
+                                    <td class="p-3 sm:p-4 border-r-2 border-black bg-amber-200">{{ $labels['file_label'] }}</td>
                                     <td class="p-3 sm:p-4">
                                         @if($project->file_path)
                                             <div class="relative inline-block">

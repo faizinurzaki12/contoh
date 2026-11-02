@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Support\MuseumCache;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -15,6 +17,16 @@ class ProjectController extends Controller
      * Daftar jurusan yang boleh mengirim karya (urutan = urutan tombol di halaman upload).
      */
     private const JURUSAN_LIST = ['PPLG', 'TKJ', 'DKV', 'TOI', 'TSM'];
+
+    /**
+     * Jurusan siswa yang sedang login (sudah dinormalkan). Null kalau kosong / tidak dikenali.
+     */
+    private function jurusanSiswa(): ?string
+    {
+        $key = User::normalizeJurusan(Auth::user()->jurusan);
+
+        return in_array($key, self::JURUSAN_LIST, true) ? $key : null;
+    }
 
     public function index()
     {
@@ -31,6 +43,9 @@ class ProjectController extends Controller
             abort(403);
         }
 
+        // Load relasi reviewer jika ada
+        $project->load('reviewer');
+
         return view('siswa.detail-karya', compact('project'));
     }
 
@@ -46,12 +61,23 @@ class ProjectController extends Controller
 
         $project->delete();
 
+        MuseumCache::flush('karya', 'stat');
+
         return redirect('/siswa/karya')
             ->with('success', 'Karya berhasil dihapus.');
     }
 
     public function store(Request $request)
     {
+        // Jurusan dikunci sesuai akun siswa (nilai dari form / DevTools diabaikan)
+        $jurusanSiswa = $this->jurusanSiswa();
+
+        if (!$jurusanSiswa) {
+            abort(403, 'Jurusan akun kamu belum diatur. Hubungi admin jurusan.');
+        }
+
+        $request->merge(['jurusan' => $jurusanSiswa]);
+
         // 1. VALIDASI LANGSUNG DI DALAM CONTROLLER
         $request->validate([
             'title'            => 'required|string|max:255',
@@ -104,6 +130,8 @@ class ProjectController extends Controller
             'status'           => 'pending',
         ]);
 
+        MuseumCache::flush('karya', 'stat');
+
         return redirect('/siswa/upload')
             ->with('success', 'Karya berhasil diupload dan dikompres.')
             ->with('active_jurusan', $request->jurusan);
@@ -111,7 +139,9 @@ class ProjectController extends Controller
 
     public function upload()
     {
-        $jurusanList = self::JURUSAN_LIST;
+        // Hanya jurusan milik siswa yang login (kosong = belum diatur / tidak dikenali)
+        $jurusanSiswa = $this->jurusanSiswa();
+        $jurusanList  = $jurusanSiswa ? [$jurusanSiswa] : [];
 
         // Warna tombol jurusan & tombol kirim (setara Bootstrap:
         // PPLG = success, TKJ = primary, DKV = warning, TOI = secondary, TSM = danger)
@@ -131,7 +161,7 @@ class ProjectController extends Controller
             'TSM'  => 'bg-red-600',
         ];
 
-        return view('siswa.upload', compact('jurusanList', 'jurusanColor', 'jurusanBadge'));
+        return view('siswa.upload', compact('jurusanList', 'jurusanColor', 'jurusanBadge', 'jurusanSiswa'));
     }
 
     /**

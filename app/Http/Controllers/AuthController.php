@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\MuseumCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -94,6 +95,9 @@ class AuthController extends Controller
             return $user;
         });
 
+        // Siswa baru -> total siswa di beranda & dashboard ikut berubah
+        MuseumCache::flush('karya', 'stat');
+
         Auth::login($user);
 
         return redirect('/siswa/dashboard');
@@ -154,6 +158,9 @@ class AuthController extends Controller
         });
 
         session()->forget('google_user');
+
+        // Siswa baru -> total siswa di beranda & dashboard ikut berubah
+        MuseumCache::flush('karya', 'stat');
 
         Auth::login($user);
 

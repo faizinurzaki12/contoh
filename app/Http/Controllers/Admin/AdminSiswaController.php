@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\MuseumCache;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AdminSiswaController extends Controller
 {
@@ -13,13 +15,13 @@ class AdminSiswaController extends Controller
         $search = $request->search;
 
         $query = User::where('role', 2)
-            ->with('invitationCode') // ← tambahkan ini
+            ->visibleToAdmin(Auth::user()) // admin jurusan hanya melihat siswa jurusannya
+            ->with('invitationCode')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%$search%")
                     ->orWhere('email', 'like', "%$search%")
-                    ->orWhere('kelas', 'like', "%$search%")
-                    ->orWhere('angkatan', 'like', "%$search%");
+                    ->orWhere('kelas', 'like', "%$search%");
                 });
             });
 
@@ -34,6 +36,8 @@ class AdminSiswaController extends Controller
 
     public function update(Request $request, User $user)
     {
+        abort_unless($user->isManageableBy(Auth::user()), 403, 'Siswa ini bukan dari jurusanmu.');
+
         $request->validate([
             'name' => 'required',
             'kelas' => 'required',
@@ -46,12 +50,18 @@ class AdminSiswaController extends Controller
             'email' => $request->email,
         ]);
 
+        MuseumCache::flush('karya');
+
         return back()->with('success','Data siswa berhasil diubah.');
     }
 
     public function destroy(User $user)
     {
+        abort_unless($user->isManageableBy(Auth::user()), 403, 'Siswa ini bukan dari jurusanmu.');
+
         $user->delete();
+
+        MuseumCache::flush('karya', 'stat');
 
         return back()->with('success','Data siswa berhasil dihapus.');
     }

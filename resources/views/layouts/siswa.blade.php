@@ -85,8 +85,14 @@
             <div>
                 {{-- User Info --}}
                 <div class="p-4 bg-[#E0E7FF] neo-border neo-shadow-sm rounded-2xl mb-6 flex items-center gap-3">
-                    @if (Auth::user()->avatar)
-                        <img src="{{ Auth::user()->avatar }}" alt="Foto Profil"
+                        @php
+                        $sideAv = Auth::user()->avatar;
+                        $sideAvUrl = $sideAv
+                            ? (str_starts_with($sideAv, 'http') ? $sideAv : (str_starts_with($sideAv, '/storage') ? asset($sideAv) : asset('storage/' . $sideAv)))
+                            : null;
+                    @endphp
+                    @if ($sideAvUrl)
+                        <img src="{{ $sideAvUrl }}" alt="Foto Profil" referrerpolicy="no-referrer"
                             class="w-10 h-10 neo-border rounded-xl object-cover shrink-0">
                     @else
                         <div class="w-10 h-10 bg-[#C7D2FE] neo-border rounded-xl flex items-center justify-center text-slate-900 font-black text-lg shrink-0">

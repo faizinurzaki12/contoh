@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\MuseumCache;
 use Illuminate\Support\Facades\Auth;
 
 class AdminDashboardController extends Controller
@@ -13,46 +14,39 @@ class AdminDashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Query Utama
-        $projectQuery = Project::query();
-        $siswaQuery = User::where('role', 2); // Role 2 = Siswa
+        // Cache dipisah per jurusan. Super Admin / admin tanpa jurusan = 'all'
+        $scope = $user->isSuperAdmin() ? 'all' : (User::normalizeJurusan($user->jurusan) ?? 'none');
 
-        // Filter Jurusan jika BUKAN Super Admin
-        if (!$user->isSuperAdmin() && $user->jurusan) {
-            $projectQuery->where('jurusan', $user->jurusan);
-            $siswaQuery->where('jurusan', $user->jurusan);
-        }
+        $data = MuseumCache::remember('stat', "admin.dashboard.{$scope}", function () use ($user) {
+            // Admin jurusan hanya menghitung karya & siswa jurusannya (Super Admin: semua)
+            $projectQuery = Project::visibleToAdmin($user);
+            $siswaQuery   = User::where('role', 2)->visibleToAdmin($user); // Role 2 = Siswa
 
-        // Hitung Statistik
-        $totalProject = (clone $projectQuery)->count();
-        $pending      = (clone $projectQuery)->pending()->count();
-        $approved     = (clone $projectQuery)->approved()->count();
-        $totalSiswa   = $siswaQuery->count();
+            return [
+                // Statistik
+                'totalProject' => (clone $projectQuery)->count(),
+                'pending'      => (clone $projectQuery)->pending()->count(),
+                'approved'     => (clone $projectQuery)->approved()->count(),
+                'totalSiswa'   => $siswaQuery->count(),
 
-        // Overview 1: Karya Menunggu Moderasi (Max 5)
-        $pendingProjects = (clone $projectQuery)
-            ->with('user')
-            ->pending()
-            ->latest()
-            ->take(5)
-            ->get();
+                // Overview 1: Karya Menunggu Moderasi (Max 5)
+                'pendingProjects' => (clone $projectQuery)
+                    ->with('user')
+                    ->pending()
+                    ->latest()
+                    ->take(5)
+                    ->get(),
 
-        // Overview 2: Karya Terbaru yang Sudah Disetujui (Max 5)
-        $approvedProjects = (clone $projectQuery)
-            ->with('user')
-            ->approved()
-            ->latest()
-            ->take(5)
-            ->get();
+                // Overview 2: Karya Terbaru yang Sudah Disetujui (Max 5)
+                'approvedProjects' => (clone $projectQuery)
+                    ->with('user')
+                    ->approved()
+                    ->latest()
+                    ->take(5)
+                    ->get(),
+            ];
+        }, MuseumCache::TTL_STAT);
 
-        return view('admin.dashboard', compact(
-            'totalProject',
-            'pending',
-            'approved',
-            'totalSiswa',
-            'pendingProjects',
-            'approvedProjects',
-            'user'
-        ));
+        return view('admin.dashboard', $data + ['user' => $user]);
     }
 }

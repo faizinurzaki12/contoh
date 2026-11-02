@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Support\MuseumCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,10 +11,12 @@ class KaryaController extends Controller
 {
     public function index()
     {
-        $karyas = Project::with('user')
-            ->approved()
-            ->latest()
-            ->get();
+        $karyas = MuseumCache::remember('karya', 'karya.index', function () {
+            return Project::with('user')
+                ->approved()
+                ->latest()
+                ->get();
+        });
 
         return view('karya', compact('karyas'));
     }
@@ -22,15 +25,24 @@ class KaryaController extends Controller
     {
         $project->load('user');
 
-        $comments = $project->comments()
-            ->whereNull('parent_id')
-            ->with(['user', 'replies.user'])
-            ->latest()
-            ->get();
+        // Komentar + jumlahnya di-cache per karya (5 menit).
+        // Otomatis "dihapus" saat ada komentar baru (lihat comment() di bawah).
+        $cached = MuseumCache::remember("komentar.{$project->id}", 'tree', function () use ($project) {
+            return [
+                'comments' => $project->comments()
+                    ->whereNull('parent_id')
+                    ->with(['user', 'replies.user'])
+                    ->latest()
+                    ->get(),
+                'count'    => $project->comments()->count(),
+            ];
+        }, 300);
 
-        $commentsCount = $project->comments()->count();
+        $comments      = $cached['comments'];
+        $commentsCount = $cached['count'];
 
-        // Sudah di-like? User login dicek dari database, tamu dari session
+        // Sudah di-like? Ini per-pengunjung, JANGAN di-cache.
+        // User login dicek dari database, tamu dari session
         $liked = Auth::check()
             ? $project->likes()->where('user_id', Auth::id())->exists()
             : in_array($project->id, session('guest_likes', []));
@@ -64,6 +76,9 @@ class KaryaController extends Controller
             'type'       => $data['type'],
             'attachment' => $data['type'] === 'gif' ? $data['attachment'] : null,
         ]);
+
+        // Hapus cache komentar karya ini + list/profil (jumlah komentar tampil di profil)
+        MuseumCache::flush("komentar.{$project->id}", 'karya');
 
         $comment->load('user');
 

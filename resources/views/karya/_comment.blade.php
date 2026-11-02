@@ -30,12 +30,13 @@
                     <span class="font-black text-xs truncate">{{ $name }}</span>
                     <span class="text-[10px] font-bold text-zinc-500 shrink-0">{{ $c->created_at->diffForHumans() }}</span>
                 </div>
+                <p class="text-xs font-bold leading-relaxed break-words whitespace-pre-line">{{ $c->body }}</p>
 
-                @if($c->type === 'gif')
+                <!-- @if($c->type === 'gif')
                     <img src="{{ $c->attachment }}" alt="GIF" loading="lazy" class="mt-1 w-full max-w-[200px] rounded-xl border-2 border-zinc-900 dark:border-zinc-100">
                 @else
                     <p class="text-xs font-bold leading-relaxed break-words whitespace-pre-line">{{ $c->body }}</p>
-                @endif
+                @endif -->
             </div>
 
             <button type="button" data-reply data-id="{{ $rootId }}" data-name="{{ $name }}"

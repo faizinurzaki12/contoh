@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\MuseumCache;
 use App\Http\Controllers\Controller;
 use App\Models\InvitationCode;
 use Illuminate\Http\Request;
@@ -39,6 +40,8 @@ class AdminInvitationCodeController extends Controller
 
         InvitationCode::create($validated);
 
+        MuseumCache::flush('stat'); // total kode undangan di dashboard super admin
+
         return redirect()->route('admin.kode-undangan.index')
             ->with('success', 'Kode undangan berhasil ditambahkan.');
     }
@@ -74,6 +77,8 @@ class AdminInvitationCodeController extends Controller
     public function destroy(InvitationCode $kodeUndangan)
     {
         $kodeUndangan->delete();
+
+        MuseumCache::flush('stat');
 
         return redirect()->route('admin.kode-undangan.index')
             ->with('success', 'Kode undangan berhasil dihapus.');

@@ -67,36 +67,27 @@
     {{-- Penanda session success dan jurusan aktif jika terjadi error validasi --}}
     <div id="pageData"
         data-success="{{ session('success') ? 'true' : 'false' }}"
-        data-active-jurusan="{{ session('active_jurusan', old('jurusan')) }}"
+        data-active-jurusan="{{ session('active_jurusan', old('jurusan', $jurusanSiswa)) }}"
         class="hidden"></div>
 
     <div class="p-4 sm:p-6 md:p-8 w-full flex justify-center items-start">
         <div class="max-w-2xl w-full bg-white neo-border neo-shadow-lg rounded-2xl p-4 sm:p-6 md:p-8 my-2 sm:my-6">
 
-            {{-- Pilihan Jurusan --}}
-            <div class="flex flex-row justify-center gap-4 flex-wrap">
-                @foreach ($jurusanList as $jurusan)
-                    <button type="button" data-jurusan="{{ $jurusan }}"
-                        onclick="pilihJurusan('{{ $jurusan }}', event)"
-                        class="btn-jurusan w-[100px] px-3 py-2 rounded-lg text-white font-black text-sm {{ $jurusanColor[$jurusan] }}">
-                        {{ $jurusan === 'TKJ' ? 'TJKT' : $jurusan }}
-                    </button>
-                @endforeach
-            </div>
+            {{-- Jurusan dikunci sesuai akun siswa (tidak ada pilihan jurusan lagi) --}}
+            @if ($jurusanSiswa)
+                <p class="text-center text-sm font-bold text-slate-500">
+                    Karya akan dikirim atas nama jurusan
+                    <span class="inline-block ml-1 px-3 py-1 rounded-lg text-white font-black {{ $jurusanBadge[$jurusanSiswa] }}">
+                        {{ $jurusanSiswa === 'TKJ' ? 'TJKT' : $jurusanSiswa }}
+                    </span>
+                </p>
+            @else
+                <p class="text-center text-sm font-extrabold text-rose-600 py-6">
+                    Jurusan akun kamu belum diatur atau tidak dikenali, jadi belum bisa mengirim karya. Hubungi admin jurusan.
+                </p>
+            @endif
 
             <hr class="my-6 border-t-[3px] border-slate-900 border-dashed" />
-
-            <div id="pilihJurusanNotice">
-                <p id="pilihJurusanText" class="text-center text-sm font-bold text-slate-500 mb-2">Pilih Jurusan Kamu Terlebih Dahulu</p>
-
-                {{-- Pesan jika belum memilih jurusan --}}
-                <div id="belumPilihJurusan" class="text-center text-slate-400 py-6">
-                    <svg class="w-8 h-8 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                    <p class="text-sm font-bold">Silahkan pilih jurusan di atas untuk menampilkan form Kirim.</p>
-                </div>
-            </div>
 
             @foreach ($jurusanList as $jurusan)
                 @php
@@ -130,17 +121,6 @@
                             @enderror
                         @endif
                     </div>
-
-                    {{-- Nomor WhatsApp untuk jurusan TJKT & TSM diambil dari profil siswa (users.phone_number),
-                         tidak lagi diisi ulang di sini. Kalau belum diisi, arahkan ke halaman profil. --}}
-                    @if (in_array($key, ['TKJ', 'TSM']) && empty(Auth::user()->phone_number))
-                        <div class="rounded-xl bg-[#FDE68A] neo-border neo-shadow-sm px-4 py-3">
-                            <p class="text-xs font-extrabold text-slate-900 leading-relaxed">
-                                Nomor WhatsApp kamu belum diisi. Karya jurusan {{ $key === 'TKJ' ? 'TJKT' : 'TSM' }} butuh nomor WhatsApp aktif agar bisa dihubungi.
-                                <a href="{{ route('siswa.profil.edit') }}" class="underline font-black">Isi di halaman profil</a> dulu sebelum mengirim.
-                            </p>
-                        </div>
-                    @endif
 
                     {{-- Technology Stack / Tools --}}
                     <div>

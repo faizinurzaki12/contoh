@@ -4,26 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Support\MuseumCache;
 
 class PublicController extends Controller
 {
     public function index()
     {
-        $projects = Project::with(['user'])
-            ->where('status', 'approved')
-            ->latest()
-            ->get();
+        $data = MuseumCache::remember('karya', 'home', function () {
+            $projects = Project::with('user')
+                ->approved()
+                ->latest()
+                ->get();
 
-        $totalKarya = Project::where('status', 'approved')->count();
+            return [
+                'projects'   => $projects,
+                'totalKarya' => $projects->count(), // = jumlah karya approved, tanpa query tambahan
+                'totalSiswa' => User::where('role', 2)->count(),
+                'totalAdmin' => User::where('role', 1)->count(),
+            ];
+        });
 
-     $totalSiswa = User::where('role', 2)->count();
-
-$totalAdmin = User::where('role', 1)->count();
-        return view('index', compact(
-            'projects',
-            'totalKarya',
-            'totalSiswa',
-            'totalAdmin'
-        ));
+        return view('index', $data);
     }
 }
